@@ -1,7 +1,6 @@
 import streamlit as st
 import random
 
-# -------------------- CONSTANTS --------------------
 AGE_GROUPS = {
     "Children (4-8 years)": 1200,
     "Teens (9-13 years)": 1700,
@@ -17,7 +16,6 @@ HYDRATION_TIPS = [
     "Hydrate after exercise to recover faster."
 ]
 
-# -------------------- SESSION STATE --------------------
 if "phase" not in st.session_state:
     st.session_state.phase = 1
 if "age_group" not in st.session_state:
@@ -31,7 +29,6 @@ if "show_tips" not in st.session_state:
 if "mascot_on" not in st.session_state:
     st.session_state.mascot_on = True
 
-# -------------------- GLOBAL STYLE --------------------
 st.markdown("""
     <style>
     body {
@@ -51,33 +48,34 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# -------------------- PHASE 1 --------------------
 if st.session_state.phase == 1:
     st.title("💧 Welcome to WaterBuddy")
     st.write("Your friendly daily hydration companion.")
-
     if st.button("Let's begin 💧", key="start_btn"):
         st.session_state.phase = 2
 
-# -------------------- PHASE 2 --------------------
 elif st.session_state.phase == 2:
-    st.header("Step 1: Select your age group")
+    st.header("Select your age group")
+    if st.button("Children (4–8 years)", key="age_children"):
+        st.session_state.age_group = "Children (4-8 years)"
+        st.session_state.goal = AGE_GROUPS["Children (4-8 years)"]
+        st.session_state.phase = 3
+    if st.button("Teens (9–13 years)", key="age_teens"):
+        st.session_state.age_group = "Teens (9-13 years)"
+        st.session_state.goal = AGE_GROUPS["Teens (9-13 years)"]
+        st.session_state.phase = 3
+    if st.button("Adults (14–64 years)", key="age_adults"):
+        st.session_state.age_group = "Adults (14-64 years)"
+        st.session_state.goal = AGE_GROUPS["Adults (14-64 years)"]
+        st.session_state.phase = 3
+    if st.button("Seniors (65+ years)", key="age_seniors"):
+        st.session_state.age_group = "Seniors (65+ years)"
+        st.session_state.goal = AGE_GROUPS["Seniors (65+ years)"]
+        st.session_state.phase = 3
 
-    for group, ml in AGE_GROUPS.items():
-        if st.button(group, key=f"age_{group}"):
-            st.session_state.age_group = group
-            st.session_state.goal = ml
-            st.session_state.phase = 3
-
-# -------------------- PHASE 3 --------------------
 elif st.session_state.phase == 3:
-    st.header("Step 2: Confirm or adjust your daily goal")
-
-    st.write(
-        f"Recommended goal for **{st.session_state.age_group}**: "
-        f"{AGE_GROUPS[st.session_state.age_group]} ml"
-    )
-
+    st.header("Confirm or adjust your daily goal")
+    st.write(f"Recommended goal for {st.session_state.age_group}: {AGE_GROUPS[st.session_state.age_group]} ml")
     st.session_state.goal = st.number_input(
         "Your daily water goal (ml):",
         min_value=500,
@@ -86,44 +84,39 @@ elif st.session_state.phase == 3:
         step=100,
         key="goal_input"
     )
-
     if st.button("Continue ➡️", key="continue_btn"):
         st.session_state.phase = 4
 
-# -------------------- PHASE 4 (MAIN DASHBOARD) --------------------
 elif st.session_state.phase == 4:
     st.title("📊 WaterBuddy Dashboard")
-
-    st.write(f"**Age group:** {st.session_state.age_group}")
-    st.write(f"**Daily goal:** {st.session_state.goal} ml")
+    st.write(f"Age group: {st.session_state.age_group}")
+    st.write(f"Daily goal: {st.session_state.goal} ml")
 
     col1, col2 = st.columns(2)
-
     with col1:
         if st.button("+250 ml", key="add250_btn"):
             st.session_state.total += 250
-
     with col2:
-        manual_amount = st.number_input("Log custom amount (ml):",
-                                        min_value=0,
-                                        step=50,
-                                        key="manual_input")
+        manual_amount = st.number_input(
+            "Log custom amount (ml):",
+            min_value=0,
+            step=50,
+            key="manual_input"
+        )
         if st.button("Add custom amount", key="add_custom"):
             st.session_state.total += manual_amount
 
     if st.button("🔄 New Day (Reset)", key="reset_btn"):
         st.session_state.total = 0
 
-    # Progress
     remaining = max(st.session_state.goal - st.session_state.total, 0)
     progress = min(st.session_state.total / st.session_state.goal, 1.0)
 
     st.progress(progress)
-    st.write(f"**Total intake so far:** {st.session_state.total} ml")
-    st.write(f"**Remaining to goal:** {remaining} ml")
-    st.write(f"**Progress:** {progress*100:.1f}%")
+    st.write(f"Total intake so far: {st.session_state.total} ml")
+    st.write(f"Remaining to goal: {remaining} ml")
+    st.write(f"Progress: {progress*100:.1f}%")
 
-    # Mascot messages
     if st.session_state.mascot_on:
         if progress == 0:
             st.info("Let's start hydrating! 🚰🙂")
@@ -137,8 +130,8 @@ elif st.session_state.phase == 4:
             st.balloons()
             st.success("🎉 Congratulations! You hit your hydration goal! 🥳")
 
-    # Tips
     if st.session_state.show_tips:
         st.write("---")
         st.write("💡 Tip of the day:")
         st.write(random.choice(HYDRATION_TIPS))
+
