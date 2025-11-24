@@ -68,29 +68,29 @@ def reset_day():
     st.session_state.total = 0
 
 if st.session_state.phase == 1:
-    st.title("💧 Welcome to WaterBuddy")
+    st.title("Welcome to WaterBuddy")
     st.write("Your friendly daily hydration companion.")
-    st.button("Let's begin 💧", on_click=start_app)
+    st.button("Let's begin", on_click=start_app)
 
 elif st.session_state.phase == 2:
-    st.header("Step 1: Select your age group")
+    st.header("Select your age group")
     for group, ml in AGE_GROUPS.items():
         st.button(group, on_click=select_age, args=(group, ml))
 
 elif st.session_state.phase == 3:
-    st.header("Step 2: Confirm or adjust your daily goal")
+    st.header("Adjust your daily goal")
     st.write(f"Recommended goal for {st.session_state.age_group}: {AGE_GROUPS[st.session_state.age_group]} ml")
     st.session_state.goal = st.number_input(
         "Your daily water goal (ml):",
         min_value=500,
-        max_value=4000,
+        max_value=10000,
         value=AGE_GROUPS[st.session_state.age_group],
         step=100
     )
-    st.button("Continue ➡️", on_click=continue_to_dashboard)
+    st.button("Continue", on_click=continue_to_dashboard)
 
 elif st.session_state.phase == 4:
-    st.title("📊 WaterBuddy Dashboard")
+    st.title("WaterBuddy Dashboard")
     st.write(f"**Age group:** {st.session_state.age_group}")
     st.write(f"**Daily goal:** {st.session_state.goal} ml")
 
@@ -104,7 +104,7 @@ elif st.session_state.phase == 4:
             if submitted:
                 st.session_state.total += manual_amount
 
-    st.button("🔄 New Day (Reset)", on_click=reset_day)
+    st.button("New Day (Reset)", on_click=reset_day)
 
     remaining = max(st.session_state.goal - st.session_state.total, 0)
     progress = min(st.session_state.total / st.session_state.goal, 1.0)
@@ -116,13 +116,13 @@ elif st.session_state.phase == 4:
 
     if st.session_state.mascot_on:
         if progress == 0:
-            st.info("Let's start hydrating! 🚰🙂")
+            st.info("Let's start hydrating! 🙂")
         elif progress < 0.5:
-            st.info("Good start! Keep sipping 💦😃")
+            st.info("Good start! Keep sipping 😃")
         elif progress < 0.75:
             st.success("Nice! You're halfway there 😎")
         elif progress < 1.0:
-            st.success("Almost at your goal! 🌊🤗")
+            st.success("Almost at your goal! 🤗")
         else:
             st.balloons()
             st.success("🎉 Congratulations! You hit your hydration goal! 🥳")
