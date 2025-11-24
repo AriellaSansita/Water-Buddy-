@@ -1,3 +1,4 @@
+
 import streamlit as st
 import random
 
@@ -63,6 +64,16 @@ def continue_to_dashboard():
 
 def reset_day():
     st.session_state.total = 0
+
+def view_summary():
+    st.session_state.phase = 5
+
+def start_new_day():
+    st.session_state.total = 0
+    st.session_state.phase = 4
+
+def back_to_dashboard():
+    st.session_state.phase = 4
 
 # ------------------------------------------------------
 #                  SCREENS / PHASES
@@ -175,8 +186,7 @@ elif st.session_state.phase == 4:
     with colA:
         st.button("New Day", on_click=reset_day)
     with colB:
-        if st.button("View Summary"):
-            st.session_state.phase = 5
+        st.button("View Summary", on_click=view_summary)
 
     st.write("")
 
@@ -218,11 +228,6 @@ elif st.session_state.phase == 5:
 
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("Start New Day"):
-            st.session_state.total = 0
-            st.session_state.phase = 4
-            st.rerun()  # Force immediate rerun for responsiveness
+        st.button("Start New Day", on_click=start_new_day)
     with col2:
-        if st.button("Back to Dashboard"):
-            st.session_state.phase = 4
-            st.rerun()  # Force immediate rerun for responsiveness
+        st.button("Back to Dashboard", on_click=back_to_dashboard)
