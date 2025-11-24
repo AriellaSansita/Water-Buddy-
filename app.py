@@ -61,11 +61,12 @@ def select_age(group, ml):
 def continue_to_dashboard():
     st.session_state.phase = 4
 
-def add_250():
-    st.session_state.total += 250
-
 def reset_day():
     st.session_state.total = 0
+
+# ------------------------------------------------------
+#                  SCREENS / PHASES
+# ------------------------------------------------------
 
 if st.session_state.phase == 1:
     st.title("Welcome to WaterBuddy")
@@ -94,30 +95,31 @@ elif st.session_state.phase == 4:
     st.write(f"**Age group:** {st.session_state.age_group}")
     st.write(f"**Daily goal:** {st.session_state.goal} ml")
 
+    # ------------------------------------------------------
+    #        NEW QUICK ADD BUTTONS + CUSTOM ADD
+    # ------------------------------------------------------
     st.subheader("Quick Add Water")
 
-col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, col4 = st.columns(4)
 
-with col1:
-    if st.button("💧\n250 ml"):
-        st.session_state.total += 250
+    with col1:
+        if st.button("💧\n250 ml"):
+            st.session_state.total += 250
+    with col2:
+        if st.button("🥛\n500 ml"):
+            st.session_state.total += 500
+    with col3:
+        if st.button("🥤\n750 ml"):
+            st.session_state.total += 750
+    with col4:
+        if st.button("🍶\n1 L"):
+            st.session_state.total += 1000
 
-with col2:
-    if st.button("🥛\n500 ml"):
-        st.session_state.total += 500
-
-with col3:
-    if st.button("🥤\n750 ml"):
-        st.session_state.total += 750
-
-with col4:
-    if st.button("🍶\n1 L"):
-        st.session_state.total += 1000
-
-st.subheader("Custom Amount (ml)")
-custom = st.number_input("Enter amount:", min_value=0, step=50)
-if st.button("Add"):
-    st.session_state.total += custom
+    st.subheader("Custom Amount (ml)")
+    custom = st.number_input("Enter amount:", min_value=0, step=50)
+    if st.button("Add"):
+        st.session_state.total += custom
+    # ------------------------------------------------------
 
     st.button("New Day (Reset)", on_click=reset_day)
 
@@ -146,3 +148,4 @@ if st.button("Add"):
         st.write("---")
         st.write("💡 Tip of the day:")
         st.write(random.choice(HYDRATION_TIPS))
+
