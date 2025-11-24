@@ -28,11 +28,15 @@ if "show_tips" not in st.session_state:
     st.session_state.show_tips = True
 if "mascot_on" not in st.session_state:
     st.session_state.mascot_on = True
+if "dark_mode" not in st.session_state:
+    st.session_state.dark_mode = False
 
-st.markdown("""
+# Define CSS for light and dark modes
+light_css = """
     <style>
     body {
         background: linear-gradient(to right, #4FD1C5, #60A5FA);
+        color: #000000;
     }
     .stButton>button {
         background-color: #60A5FA;
@@ -45,8 +49,48 @@ st.markdown("""
         background-color: #2563EB;
         color: white;
     }
+    .stProgress > div > div > div > div {
+        background-color: #60A5FA;
+    }
+    .stTextInput, .stNumberInput {
+        background-color: #ffffff;
+        color: #000000;
+    }
     </style>
-""", unsafe_allow_html=True)
+"""
+
+dark_css = """
+    <style>
+    body {
+        background: linear-gradient(to right, #1a1a1a, #2d2d2d);
+        color: #ffffff;
+    }
+    .stButton>button {
+        background-color: #4B5563;
+        color: white;
+        border-radius: 12px;
+        font-size: 18px;
+        padding: 10px 20px;
+    }
+    .stButton>button:hover {
+        background-color: #374151;
+        color: white;
+    }
+    .stProgress > div > div > div > div {
+        background-color: #60A5FA;
+    }
+    .stTextInput, .stNumberInput {
+        background-color: #374151;
+        color: #ffffff;
+    }
+    </style>
+"""
+
+# Apply the appropriate CSS based on dark_mode
+if st.session_state.dark_mode:
+    st.markdown(dark_css, unsafe_allow_html=True)
+else:
+    st.markdown(light_css, unsafe_allow_html=True)
 
 if st.session_state.phase == 1:
     st.title("💧 Welcome to WaterBuddy")
@@ -92,6 +136,12 @@ elif st.session_state.phase == 4:
     st.write(f"Age group: {st.session_state.age_group}")
     st.write(f"Daily goal: {st.session_state.goal} ml")
 
+    # Dark/Light mode toggle
+    mode_label = "🌙 Dark Mode" if not st.session_state.dark_mode else "☀️ Light Mode"
+    if st.button(mode_label, key="toggle_mode"):
+        st.session_state.dark_mode = not st.session_state.dark_mode
+        st.rerun()  # Rerun to apply the new CSS
+
     col1, col2 = st.columns(2)
     with col1:
         if st.button("+250 ml", key="add250_btn"):
@@ -134,4 +184,3 @@ elif st.session_state.phase == 4:
         st.write("---")
         st.write("💡 Tip of the day:")
         st.write(random.choice(HYDRATION_TIPS))
-
