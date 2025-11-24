@@ -29,6 +29,42 @@ if "show_tips" not in st.session_state:
 if "mascot_on" not in st.session_state:
     st.session_state.mascot_on = True
 
+# Callback functions for button actions (added for single-click responsiveness)
+def start_app():
+    st.session_state.phase = 2
+
+def select_children():
+    st.session_state.age_group = "Children (4-8 years)"
+    st.session_state.goal = AGE_GROUPS["Children (4-8 years)"]
+    st.session_state.phase = 3
+
+def select_teens():
+    st.session_state.age_group = "Teens (9-13 years)"
+    st.session_state.goal = AGE_GROUPS["Teens (9-13 years)"]
+    st.session_state.phase = 3
+
+def select_adults():
+    st.session_state.age_group = "Adults (14-64 years)"
+    st.session_state.goal = AGE_GROUPS["Adults (14-64 years)"]
+    st.session_state.phase = 3
+
+def select_seniors():
+    st.session_state.age_group = "Seniors (65+ years)"
+    st.session_state.goal = AGE_GROUPS["Seniors (65+ years)"]
+    st.session_state.phase = 3
+
+def continue_to_dashboard():
+    st.session_state.phase = 4
+
+def add_250():
+    st.session_state.total += 250
+
+def add_custom(manual_amount):
+    st.session_state.total += manual_amount
+
+def reset_day():
+    st.session_state.total = 0
+
 st.markdown("""
     <style>
     body {
@@ -51,27 +87,19 @@ st.markdown("""
 if st.session_state.phase == 1:
     st.title("💧 Welcome to WaterBuddy")
     st.write("Your friendly daily hydration companion.")
-    if st.button("Let's begin 💧", key="start_btn"):
-        st.session_state.phase = 2
+    if st.button("Let's begin 💧", key="start_btn", on_click=start_app):
+        pass  # Action handled by callback
 
 elif st.session_state.phase == 2:
     st.header("Select your age group")
-    if st.button("Children (4–8 years)", key="age_children"):
-        st.session_state.age_group = "Children (4-8 years)"
-        st.session_state.goal = AGE_GROUPS["Children (4-8 years)"]
-        st.session_state.phase = 3
-    if st.button("Teens (9–13 years)", key="age_teens"):
-        st.session_state.age_group = "Teens (9-13 years)"
-        st.session_state.goal = AGE_GROUPS["Teens (9-13 years)"]
-        st.session_state.phase = 3
-    if st.button("Adults (14–64 years)", key="age_adults"):
-        st.session_state.age_group = "Adults (14-64 years)"
-        st.session_state.goal = AGE_GROUPS["Adults (14-64 years)"]
-        st.session_state.phase = 3
-    if st.button("Seniors (65+ years)", key="age_seniors"):
-        st.session_state.age_group = "Seniors (65+ years)"
-        st.session_state.goal = AGE_GROUPS["Seniors (65+ years)"]
-        st.session_state.phase = 3
+    if st.button("Children (4–8 years)", key="age_children", on_click=select_children):
+        pass  # Action handled by callback
+    if st.button("Teens (9–13 years)", key="age_teens", on_click=select_teens):
+        pass  # Action handled by callback
+    if st.button("Adults (14–64 years)", key="age_adults", on_click=select_adults):
+        pass  # Action handled by callback
+    if st.button("Seniors (65+ years)", key="age_seniors", on_click=select_seniors):
+        pass  # Action handled by callback
 
 elif st.session_state.phase == 3:
     st.header("Confirm or adjust your daily goal")
@@ -84,8 +112,8 @@ elif st.session_state.phase == 3:
         step=100,
         key="goal_input"
     )
-    if st.button("Continue ➡️", key="continue_btn"):
-        st.session_state.phase = 4
+    if st.button("Continue ➡️", key="continue_btn", on_click=continue_to_dashboard):
+        pass  # Action handled by callback
 
 elif st.session_state.phase == 4:
     st.title("📊 WaterBuddy Dashboard")
@@ -94,8 +122,8 @@ elif st.session_state.phase == 4:
 
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("+250 ml", key="add250_btn"):
-            st.session_state.total += 250
+        if st.button("+250 ml", key="add250_btn", on_click=add_250):
+            pass  # Action handled by callback
     with col2:
         manual_amount = st.number_input(
             "Log custom amount (ml):",
@@ -103,11 +131,11 @@ elif st.session_state.phase == 4:
             step=50,
             key="manual_input"
         )
-        if st.button("Add custom amount", key="add_custom"):
-            st.session_state.total += manual_amount
+        if st.button("Add custom amount", key="add_custom", on_click=lambda: add_custom(manual_amount)):
+            pass  # Action handled by callback
 
-    if st.button("🔄 New Day (Reset)", key="reset_btn"):
-        st.session_state.total = 0
+    if st.button("🔄 New Day (Reset)", key="reset_btn", on_click=reset_day):
+        pass  # Action handled by callback
 
     remaining = max(st.session_state.goal - st.session_state.total, 0)
     progress = min(st.session_state.total / st.session_state.goal, 1.0)
