@@ -1,14 +1,11 @@
-# app.py - WaterBuddy (final FA-2 version)
-# NOTE: developer requested this exact path be included as the mascot image.
-MASCOT_IMG_PATH = "/mnt/data/Screenshot 2025-11-24 at 9.17.29 AM.png"
-
 import streamlit as st
-import time
 import random
+import time
 
-# -------------------------
-# Constants
-# -------------------------
+# ------------ CONSTANTS ------------
+IMAGE_PATH = "/mnt/data/Screenshot 2025-11-24 at 9.17.29 AM.png"   # REQUIRED by system
+CUP_ML = 240
+
 AGE_GROUPS = {
     "Children (4-8 years)": 1200,
     "Teens (9-13 years)": 1700,
@@ -16,255 +13,187 @@ AGE_GROUPS = {
     "Seniors (65+ years)": 1800,
 }
 
-CUP_ML = 240
-QUICK_AMOUNTS = [250, 500, 750, 1000]
-HYDRATION_TIPS = [
-    "Try drinking a glass of water before meals.",
-    "Keep a bottle on your desk as a reminder.",
-    "Start your morning with a glass of water.",
-    "Set small goals: one cup every hour.",
-    "Hydrate after exercise to recover faster."
-]
-
-# -------------------------
-# Session state defaults
-# -------------------------
+# ------------ SESSION DEFAULTS ------------
 defaults = {
-    "page": "welcome",   # welcome, age, goal, dashboard, summary
-    "age_group": None,
+    "phase": "welcome",
+    "age": None,
     "standard_goal": 0,
     "goal": 0,
     "total": 0,
-    "log_unit": "ml",    # "ml" or "cups"
-    "show_tips": True,
 }
+
 for k, v in defaults.items():
     if k not in st.session_state:
         st.session_state[k] = v
 
-# -------------------------
-# Styling (simple)
-# -------------------------
-st.set_page_config(page_title="WaterBuddy", layout="centered")
 
-st.markdown(
-    """
-    <style>
-    .page-title {text-align: center; font-size:32px; font-weight:700; margin-bottom:4px;}
-    .card {background: rgba(255,255,255,0.06); border-radius:12px; padding:12px; box-shadow:0 4px 12px rgba(0,0,0,0.06);}
-    .small {font-size:14px; color:#DBEAFE; margin-bottom:8px;}
-    .btn-grid > div {display:inline-block; margin:6px;}
-    .emoji-btn {font-size:15px; padding:10px 14px; border-radius:10px; border:none;}
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-# -------------------------
-# Helper functions
-# -------------------------
-def go(page):
-    st.session_state.page = page
-
-def set_age(group):
-    st.session_state.age_group = group
-    st.session_state.standard_goal = AGE_GROUPS[group]
-    st.session_state.goal = AGE_GROUPS[group]
-    go("goal")
-
-def add_ml(amount_ml):
-    st.session_state.total += int(amount_ml)
-
-def reset_day_and_go_dashboard():
-    st.session_state.total = 0
-    go("dashboard")
-
-def compute_progress():
-    if st.session_state.goal <= 0:
-        return 0.0
-    return min(st.session_state.total / st.session_state.goal, 1.0)
-
-# Turtle mascot mapping (from user's JS)
-def turtle_mascot(progress_frac):
-    # progress_frac in 0..1
-    if progress_frac >= 1.0:
+# ------------ TURTLE MASCOT ------------
+def turtle_mascot(progress):
+    if progress >= 1:
         return "🐢✨", "Awesome job! You did it!"
-    elif progress_frac >= 0.75:
+    elif progress >= 0.75:
         return "🐢👏", "So close! You're amazing!"
-    elif progress_frac >= 0.5:
+    elif progress >= 0.5:
         return "🐢😊", "Great progress! Keep swimming!"
-    elif progress_frac > 0:
+    elif progress > 0:
         return "🐢👋", "Nice start! Let's keep going!"
     else:
         return "🐢💙", "Hey buddy! Ready to hydrate?"
 
-# Simple ASCII water bottle animation
-def animate_bottle(progress_frac, speed=0.06):
-    levels = 10
-    filled = int(round(progress_frac * levels))
+
+# ------------ ASCII WATER ANIMATION ------------
+def animate_water(progress):
     container = st.empty()
-    # animate incremental fill from 0 to filled
-    for lvl in range(filled + 1):
-        lines = ["   _______  "]
-        for i in range(levels, 0, -1):
-            if i <= lvl:
-                lines.append("  | █████ |")
+    levels = 10
+    fill = int(progress * levels)
+
+    for i in range(fill + 1):
+        bottle = ["   _______  "]
+        for lvl in range(levels, 0, -1):
+            if lvl <= i:
+                bottle.append("  | █████ |")
             else:
-                lines.append("  |       |")
-        lines.append("   ‾‾‾‾‾‾‾  ")
-        container.markdown("```\n" + "\n".join(lines) + "\n```")
-        time.sleep(speed)
-    # final hold
-    time.sleep(0.12)
+                bottle.append("  |       |")
+        bottle.append("   ‾‾‾‾‾‾‾  ")
 
-# -------------------------
-# Pages
-# -------------------------
+        container.markdown("```\n" + "\n".join(bottle) + "\n```")
+        time.sleep(0.07)
 
-# ------- WELCOME -------
-if st.session_state.page == "welcome":
-    st.markdown('<div class="page-title">WaterBuddy 🐢</div>', unsafe_allow_html=True)
-    st.markdown("<div class='small'>Your friendly daily hydration companion — simple, fast, friendly.</div>", unsafe_allow_html=True)
-    st.image(MASCOT_IMG_PATH, width=220)  # using user-provided path as required
-    st.write("")
-    if st.button("Get started"):
-        go("age")
 
-# ------- AGE SELECTION -------
-elif st.session_state.page == "age":
+# ------------ NAVIGATION ------------
+def go(page):
+    st.session_state.phase = page
+
+
+# ------------ PAGE: WELCOME ------------
+if st.session_state.phase == "welcome":
+    st.title("Welcome to WaterBuddy 🐢")
+    st.write("Your friendly daily hydration companion.")
+    st.button("Start", on_click=lambda: go("age"))
+
+
+# ------------ PAGE: AGE SELECTION ------------
+elif st.session_state.phase == "age":
     st.header("Select your age group")
-    cols = st.columns(2)
-    i = 0
-    for group in AGE_GROUPS.keys():
-        with cols[i % 2]:
-            if st.button(group):
-                set_age(group)
-        i += 1
-    st.write("")
-    if st.button("Back"):
-        go("welcome")
+    for g, ml in AGE_GROUPS.items():
+        if st.button(g):
+            st.session_state.age = g
+            st.session_state.standard_goal = ml
+            st.session_state.goal = ml
+            go("goal")
 
-# ------- ADJUST GOAL -------
-elif st.session_state.page == "goal":
-    st.header("Set your daily goal")
-    st.write(f"Recommended for **{st.session_state.age_group}**: **{st.session_state.standard_goal} ml**")
-    st.session_state.goal = st.number_input("Adjust your daily water goal (ml)", min_value=500, max_value=10000, step=100, value=st.session_state.standard_goal)
-    st.write("")
-    col1, col2 = st.columns([1,1])
-    with col1:
-        if st.button("Continue to Dashboard"):
-            go("dashboard")
-    with col2:
-        if st.button("Back"):
-            go("age")
 
-# ------- DASHBOARD -------
-elif st.session_state.page == "dashboard":
+# ------------ PAGE: SET GOAL ------------
+elif st.session_state.phase == "goal":
+    st.header("Daily Water Goal")
+
+    st.write(f"Recommended for **{st.session_state.age}**: **{st.session_state.standard_goal} ml**")
+
+    st.session_state.goal = st.number_input(
+        "Set your goal (ml):",
+        value=st.session_state.standard_goal,
+        min_value=500,
+        step=100
+    )
+
+    st.button("Continue", on_click=lambda: go("dashboard"))
+
+
+# ------------ PAGE: DASHBOARD ------------
+elif st.session_state.phase == "dashboard":
     st.title("WaterBuddy Dashboard")
-    # top cards row
-    card1, card2 = st.columns([1.6, 1])
-    with card1:
-        st.markdown("### Progress")
-        progress = compute_progress()
-        st.progress(progress)
-        st.write(f"**Total:** {st.session_state.total} ml  ({round(st.session_state.total / CUP_ML, 2)} cups)")
-        st.write(f"**Remaining:** {max(st.session_state.goal - st.session_state.total, 0)} ml")
-    with card2:
-        st.markdown("### Goal")
-        st.write(f"**Standard:** {st.session_state.standard_goal} ml")
-        st.write(f"**Your goal:** {st.session_state.goal} ml")
-        st.write("")
-        st.markdown("### Mascot")
-        mascot_emoji, mascot_msg = turtle_mascot(progress)
-        # show the uploaded image then emoji message (image may fail if path invalid on remote)
-        try:
-            st.image(MASCOT_IMG_PATH, width=150)
-        except Exception:
-            st.markdown(mascot_emoji, unsafe_allow_html=True)
-        st.write(mascot_msg)
+    st.image(IMAGE_PATH, width=200)
 
-    st.write("---")
+    total = st.session_state.total
+    goal = st.session_state.goal
+    progress = min(total / goal, 1) if goal else 0
 
-    # Two-column main area: left = quick-add, right = logging controls
-    left, right = st.columns([1, 1])
+    # Turtle mascot
+    mascot, msg = turtle_mascot(progress)
+    st.markdown(f"## {mascot}")
+    st.write(msg)
 
-    with left:
-        st.subheader("Quick Add Water")
-        # show in a clean grid
-        qa_cols = st.columns(4)
-        for i, amt in enumerate(QUICK_AMOUNTS):
-            label = {250: "💧 250 ml", 500: "🥛 500 ml", 750: "🥤 750 ml", 1000: "🍶 1 L"}[amt]
-            display = f"{round(amt / CUP_ML, 2)} cups" if st.session_state.log_unit == "cups" else f"{amt} ml"
-            if qa_cols[i].button(f"{label}\n({display})"):
-                add_ml(amt)
-        st.write("")
-        st.markdown("**Tip:** Use quick-add buttons for fast logging.")
-        if st.button("Animate bottle (show current fill)"):
-            animate_bottle(progress)
+    # Progress summary
+    st.write(f"**Standard Goal:** {st.session_state.standard_goal} ml")
+    st.write(f"**Your Goal:** {goal} ml")
+    st.progress(progress)
+    st.write(f"**Total intake:** {total} ml ({round(total / CUP_ML, 2)} cups)")
+    st.write(f"**Remaining:** {max(goal - total, 0)} ml")
 
-    with right:
-        st.subheader("Custom Log")
-        st.write("Choose logging unit (this switch affects the custom input display only):")
-        st.session_state.log_unit = st.radio("", ["ml", "cups"], index=0 if st.session_state.log_unit == "ml" else 1, horizontal=True)
-        if st.session_state.log_unit == "ml":
-            custom_ml = st.number_input("Enter amount (ml)", min_value=0, step=50, value=250, key="custom_ml")
-            if st.button("Add custom (ml)"):
-                add_ml(custom_ml)
-        else:
-            custom_cups = st.number_input("Enter amount (cups)", min_value=0.0, step=0.25, value=1.0, format="%.2f", key="custom_cups")
-            if st.button("Add custom (cups)"):
-                add_ml(int(round(custom_cups * CUP_ML)))
+    # Quick Add Buttons
+    st.subheader("Quick Add Water")
+    col1, col2, col3, col4 = st.columns(4)
 
-        st.write("---")
-        st.subheader("Extras")
-        if st.button("View End-of-Day Summary"):
+    with col1:
+        if st.button("💧\n250 ml"):
+            st.session_state.total += 250
+
+    with col2:
+        if st.button("🥛\n500 ml"):
+            st.session_state.total += 500
+
+    with col3:
+        if st.button("🥤\n750 ml"):
+            st.session_state.total += 750
+
+    with col4:
+        if st.button("🍶\n1 L"):
+            st.session_state.total += 1000
+
+    # Custom Add
+    st.subheader("Custom Amount (ml)")
+    custom = st.number_input("Enter amount:", min_value=0, step=50)
+    if st.button("Add"):
+        st.session_state.total += custom
+
+    # Controls
+    colA, colB, colC = st.columns(3)
+
+    with colA:
+        if st.button("Animate Bottle"):
+            animate_water(progress)
+
+    with colB:
+        if st.button("View Summary"):
             go("summary")
-        if st.button("Start new day (reset)"):
-            reset_day_and_go_dashboard()
 
-    st.write("---")
+    with colC:
+        if st.button("New Day"):
+            st.session_state.total = 0
 
-    # small tip area
-    if st.session_state.show_tips:
-        if st.button("Show hydration tip"):
-            st.info(random.choice(HYDRATION_TIPS))
 
-# ------- SUMMARY -------
-elif st.session_state.page == "summary":
-    st.title("End-of-Day Summary")
-    st.markdown("**Great Effort!** Keep up the good work tomorrow! 🌟")
+# ------------ PAGE: END-OF-DAY SUMMARY ------------
+elif st.session_state.phase == "summary":
+    st.title("End-of-Day Summary 🌙")
+
     total = st.session_state.total
     cups = round(total / CUP_ML, 2)
-    standard = st.session_state.standard_goal
-    pct = int(round((total / st.session_state.goal) * 100)) if st.session_state.goal else 0
+    goal = st.session_state.goal
+    pct = int((total / goal) * 100) if goal else 0
 
-    st.markdown("### Total Intake")
-    st.write(f"{total} ml ({cups} cups)")
+    st.subheader("Total Intake")
+    st.write(f"{total} ml  ({cups} cups)")
 
-    st.markdown("### Goal Progress")
-    st.write(f"{pct}% of {standard} ml")
+    st.subheader("Progress Percentage")
+    st.write(f"{pct}% of {goal} ml")
 
-    st.markdown("### Status")
-    if total >= st.session_state.goal:
+    st.subheader("Status")
+    if total >= goal:
         st.success("Goal Achieved! 🌟")
     else:
-        st.info("Goal Not Achieved — you came close, keep going tomorrow!")
+        st.info("Keep Trying! 💪")
 
-    st.write("")
-    # separate animate preview for summary
-    if st.button("Animate summary bottle"):
-        animate_bottle(compute_progress())
+    st.subheader("Animated Water Bottle")
+    st.image(IMAGE_PATH, width=200)   # Using required path
 
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("Back to Dashboard"):
-            go("dashboard")
-    with col2:
-        if st.button("Start New Day and Return"):
-            st.session_state.total = 0
-            go("dashboard")
+    st.write("---")
 
-# End of file
+    if st.button("Start New Day"):
+        st.session_state.total = 0
+        go("dashboard")
+
+    if st.button("Back to Dashboard"):
+        go("dashboard")
 
 
 """
