@@ -94,15 +94,30 @@ elif st.session_state.phase == 4:
     st.write(f"**Age group:** {st.session_state.age_group}")
     st.write(f"**Daily goal:** {st.session_state.goal} ml")
 
-    col1, col2 = st.columns(2)
-    with col1:
-        st.button("+250 ml", on_click=add_250)
-    with col2:
-        with st.form("custom_water"):
-            manual_amount = st.number_input("Log custom amount (ml):", min_value=0, step=50)
-            submitted = st.form_submit_button("Add custom amount")
-            if submitted:
-                st.session_state.total += manual_amount
+    st.subheader("Quick Add Water")
+
+col1, col2, col3, col4 = st.columns(4)
+
+with col1:
+    if st.button("💧\n250 ml"):
+        st.session_state.total += 250
+
+with col2:
+    if st.button("🥛\n500 ml"):
+        st.session_state.total += 500
+
+with col3:
+    if st.button("🥤\n750 ml"):
+        st.session_state.total += 750
+
+with col4:
+    if st.button("🍶\n1 L"):
+        st.session_state.total += 1000
+
+st.subheader("Custom Amount (ml)")
+custom = st.number_input("Enter amount:", min_value=0, step=50)
+if st.button("Add"):
+    st.session_state.total += custom
 
     st.button("New Day (Reset)", on_click=reset_day)
 
