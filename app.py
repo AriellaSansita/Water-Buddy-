@@ -1,8 +1,5 @@
 import streamlit as st
-import random
-import time
 
-IMAGE_PATH = "/mnt/data/Screenshot 2025-11-24 at 9.17.29 AM.png"
 CUP_ML = 240
 
 AGE_GROUPS = {
@@ -38,34 +35,18 @@ def turtle_mascot(progress):
         return "🐢💙", "Hey buddy! Ready to hydrate?"
 
 
-def animate_water(progress):
-    container = st.empty()
-    levels = 10
-    fill = int(progress * levels)
-
-    for i in range(fill + 1):
-        bottle = ["   _______  "]
-        for lvl in range(levels, 0, -1):
-            if lvl <= i:
-                bottle.append("  | █████ |")
-            else:
-                bottle.append("  |       |")
-        bottle.append("   ‾‾‾‾‾‾‾  ")
-
-        container.markdown("```\n" + "\n".join(bottle) + "\n```")
-        time.sleep(0.07)
-
-
 def go(page):
     st.session_state.phase = page
 
 
+# ------------------- WELCOME -------------------
 if st.session_state.phase == "welcome":
     st.title("Welcome to WaterBuddy 🐢")
     st.write("Your friendly daily hydration companion.")
     st.button("Start", on_click=lambda: go("age"))
 
 
+# ------------------- AGE SELECT -------------------
 elif st.session_state.phase == "age":
     st.header("Select your age group")
     for g, ml in AGE_GROUPS.items():
@@ -76,6 +57,7 @@ elif st.session_state.phase == "age":
             go("goal")
 
 
+# ------------------- SET GOAL -------------------
 elif st.session_state.phase == "goal":
     st.header("Daily Water Goal")
 
@@ -91,13 +73,9 @@ elif st.session_state.phase == "goal":
     st.button("Continue", on_click=lambda: go("dashboard"))
 
 
+# ------------------- DASHBOARD -------------------
 elif st.session_state.phase == "dashboard":
     st.title("WaterBuddy Dashboard")
-
-    try:
-        st.image(IMAGE_PATH, width=200)
-    except:
-        st.markdown("## 🐢")
 
     total = st.session_state.total
     goal = st.session_state.goal
@@ -109,7 +87,9 @@ elif st.session_state.phase == "dashboard":
 
     st.write(f"**Standard Goal:** {st.session_state.standard_goal} ml")
     st.write(f"**Your Goal:** {goal} ml")
+
     st.progress(progress)
+
     st.write(f"**Total intake:** {total} ml ({round(total / CUP_ML, 2)} cups)")
     st.write(f"**Remaining:** {max(goal - total, 0)} ml")
 
@@ -119,15 +99,12 @@ elif st.session_state.phase == "dashboard":
     with col1:
         if st.button("💧\n250 ml"):
             st.session_state.total += 250
-
     with col2:
         if st.button("🥛\n500 ml"):
             st.session_state.total += 500
-
     with col3:
         if st.button("🥤\n750 ml"):
             st.session_state.total += 750
-
     with col4:
         if st.button("🍶\n1 L"):
             st.session_state.total += 1000
@@ -137,21 +114,16 @@ elif st.session_state.phase == "dashboard":
     if st.button("Add"):
         st.session_state.total += custom
 
-    colA, colB, colC = st.columns(3)
-
+    colA, colB = st.columns(2)
     with colA:
-        if st.button("Animate Bottle"):
-            animate_water(progress)
-
-    with colB:
         if st.button("View Summary"):
             go("summary")
-
-    with colC:
+    with colB:
         if st.button("New Day"):
             st.session_state.total = 0
 
 
+# ------------------- SUMMARY PAGE -------------------
 elif st.session_state.phase == "summary":
     st.title("End-of-Day Summary 🌙")
 
@@ -172,11 +144,7 @@ elif st.session_state.phase == "summary":
     else:
         st.info("Keep Trying! 💪")
 
-    st.subheader("Animated Water Bottle")
-    try:
-        st.image(IMAGE_PATH, width=200)
-    except:
-        st.markdown("## 🐢")
+    st.markdown("## 🐢")
 
     st.write("---")
 
