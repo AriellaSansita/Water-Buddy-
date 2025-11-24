@@ -3,9 +3,9 @@ import random
 
 AGE_GROUPS = {
     "Children (4-8 years)": 1200,
-    "Teens (9-13 years)  ": 1700,
+    "Teens (9-13 years)": 1700,
     "Adults (14-64 years)": 2200,
-    "Seniors (65+ years) ": 1800,
+    "Seniors (65+ years)": 1800,
 }
 
 HYDRATION_TIPS = [
@@ -28,6 +28,8 @@ if "show_tips" not in st.session_state:
     st.session_state.show_tips = True
 if "mascot_on" not in st.session_state:
     st.session_state.mascot_on = True
+if "custom_amount" not in st.session_state:
+    st.session_state.custom_amount = 0
 
 st.markdown("""
     <style>
@@ -83,7 +85,7 @@ elif st.session_state.phase == 3:
         "Your daily water goal (ml):",
         min_value=500,
         max_value=10000,
-        value=AGE_GROUPS[st.session_state.age_group],
+        value=st.session_state.goal if st.session_state.goal > 0 else AGE_GROUPS[st.session_state.age_group],
         step=100
     )
     st.button("Continue", on_click=continue_to_dashboard)
@@ -123,9 +125,10 @@ elif st.session_state.phase == 4:
     # ------------------------------------------------------
     st.markdown("### ✏️ Add a custom amount")
 
-    custom = st.number_input("Enter amount (ml):", min_value=0, step=50)
+    custom = st.number_input("Enter amount (ml):", min_value=0, step=50, value=st.session_state.custom_amount)
     if st.button("Add"):
         st.session_state.total += custom
+        st.session_state.custom_amount = 0  # Reset after adding
 
     st.write("")
 
@@ -134,7 +137,7 @@ elif st.session_state.phase == 4:
     # ------------------------------------------------------
     total = st.session_state.total
     goal = st.session_state.goal
-    progress = min(total / goal, 1.0)
+    progress = min(total / goal, 1.0) if goal > 0 else 0
 
     st.markdown("### 📊 Progress")
     st.progress(progress)
@@ -193,9 +196,9 @@ elif st.session_state.phase == 5:
     st.title("🌙 End-of-Day Summary")
 
     total = st.session_state.total
-    cups = round(total / 240, 2)
+    cups = round(total / 240, 2) if total > 0 else 0
     goal = st.session_state.goal
-    progress = min(total / goal, 1.0)
+    progress = min(total / goal, 1.0) if goal > 0 else 0
 
     st.subheader("Total Intake")
     st.write(f"💧 {total} ml  ({cups} cups)")
