@@ -1,7 +1,5 @@
 import streamlit as st
 import random
-from datetime import datetime
-import matplotlib.pyplot as plt
 
 # ---------------- AGE + TIPS ----------------
 AGE_GROUPS = {
@@ -25,7 +23,6 @@ if "age_group" not in st.session_state: st.session_state.age_group = None
 if "goal" not in st.session_state: st.session_state.goal = 0
 if "total" not in st.session_state: st.session_state.total = 0
 if "custom_amount" not in st.session_state: st.session_state.custom_amount = 0
-if "history" not in st.session_state: st.session_state.history = []   # NEW
 
 
 # ---------------- FUNCTIONS ----------------
@@ -34,24 +31,15 @@ def calculate_progress(total, goal):
         return 0.0
     return min(total / goal, 1.0)
 
-
 def add_water(amount):
     try:
         amt = int(amount)
     except:
         amt = 0
-    
-    if amt > 0:
-        st.session_state.total += amt
-
-        # Add to history
-        now = datetime.now().strftime("%H:%M:%S")
-        st.session_state.history.append((now, amt, st.session_state.total))
-
+    st.session_state.total += amt
 
 def get_remaining(goal, total):
     return max(goal - total, 0)
-
 
 def get_message(progress):
     if progress == 0:
@@ -64,7 +52,6 @@ def get_message(progress):
         return "Almost there! 🤗"
     else:
         return "Goal achieved! 🎉"
-
 
 def get_mascot(progress):
     if progress == 0:
@@ -79,9 +66,25 @@ def get_mascot(progress):
         return "🎉"
 
 
-# ---------------- UI CSS ----------------
+# ---------------- SIMPLE CSS + BOTTLE ----------------
 st.markdown("""
     <style>
+    .app-background {
+        background: linear-gradient(to right, #4FD1C5, #60A5FA);
+        padding: 20px;
+        border-radius: 12px;
+    }
+    .stButton>button {
+        background-color: #60A5FA;
+        color: white;
+        border-radius: 12px;
+        font-size: 18px;
+        padding: 10px 20px;
+    }
+    .stButton>button:hover {
+        background-color: #2563EB;
+        color: white;
+    }
     .bottle {
         width: 120px;
         height: 220px;
@@ -109,34 +112,29 @@ def select_age(group, ml):
     st.session_state.goal = ml
     st.session_state.phase = 3
 def continue_to_dashboard(): st.session_state.phase = 4
-def reset_day(): 
-    st.session_state.total = 0
-    st.session_state.history = []
+def reset_day(): st.session_state.total = 0
 def view_summary(): st.session_state.phase = 5
 def start_new_day():
     st.session_state.total = 0
-    st.session_state.history = []
     st.session_state.phase = 4
 def back_to_dashboard(): st.session_state.phase = 4
 
 
-# ---------------- SCREENS ----------------
-
-# PHASE 1
+# ---------------- PHASE 1 ----------------
 if st.session_state.phase == 1:
     st.title("Welcome to WaterBuddy")
     st.write("Your friendly daily hydration companion.")
     st.button("Let's begin", on_click=start_app)
 
 
-# PHASE 2 — SELECT AGE
+# ---------------- PHASE 2 ----------------
 elif st.session_state.phase == 2:
     st.header("Select your age group")
     for group, ml in AGE_GROUPS.items():
         st.button(group, on_click=select_age, args=(group, ml))
 
 
-# PHASE 3 — ADJUST GOAL
+# ---------------- PHASE 3 ----------------
 elif st.session_state.phase == 3:
     st.header("Adjust your daily goal")
     st.write(f"Recommended goal: {AGE_GROUPS[st.session_state.age_group]} ml")
@@ -152,7 +150,7 @@ elif st.session_state.phase == 3:
     st.button("Continue", on_click=continue_to_dashboard)
 
 
-# PHASE 4 — DASHBOARD
+# ---------------- PHASE 4 — DASHBOARD ----------------
 elif st.session_state.phase == 4:
     st.title("WaterBuddy Dashboard")
     st.write(f"### Age group: {st.session_state.age_group}")
@@ -161,82 +159,82 @@ elif st.session_state.phase == 4:
     # QUICK ADD
     st.write("## 💧 Quick Add")
     col1, col2, col3, col4 = st.columns(4)
-    if col1.button("+250 ml"): add_water(250)
-    if col2.button("+500 ml"): add_water(500)
-    if col3.button("+750 ml"): add_water(750)
-    if col4.button("+1000 ml"): add_water(1000)
+
+    with col1:
+        if st.button("+250 ml"): add_water(250)
+    with col2:
+        if st.button("+500 ml"): add_water(500)
+    with col3:
+        if st.button("+750 ml"): add_water(750)
+    with col4:
+        if st.button("+1000 ml"): add_water(1000)
 
     # CUSTOM ADD
     st.write("### ✏️ Add custom amount")
     custom = st.number_input("Enter amount (ml):", min_value=0, step=50, value=0)
-    if st.button("Add"):
-        add_water(custom)
+    if st.button("Add"): add_water(custom)
 
-    # PROGRESS + BOTTLE
+    # ---------------- PROGRESS + MASCOT ----------------
     st.write("### 📊 Progress")
-    total = st.session_state.total
-    goal = st.session_state.goal
+
+    total = int(st.session_state.total)
+    goal = int(st.session_state.goal)
     progress = calculate_progress(total, goal)
-    fill = int(progress * 100)
-
-    bottle_html = f"""
-    <div style="display:flex; align-items:center; gap:20px;">
-        <div class="bottle">
-            <div class="bottle-inner" style="height:{fill}%"></div>
-        </div>
-        <div style="font-size:20px; font-weight:600;">
-            {progress*100:.1f}% complete<br>
-            {total} ml consumed
-        </div>
-    </div>
-    """
-    st.markdown(bottle_html, unsafe_allow_html=True)
-
-    # Remaining
-    st.write(f"Remaining: **{goal - total if goal > total else 0} ml**")
-
-    # MESSAGES
-    msg = get_message(progress)
-    if progress >= 1:
-        st.balloons()
-    st.info(msg)
-
-    # MASCOT — IMPROVED UI
-    st.write("### 🐢 Mascot Reaction")
+    fill_percent = int(progress * 100)
+    message = get_message(progress)
     mascot = get_mascot(progress)
-    st.markdown(
-        f"<div style='font-size:80px; text-align:center; margin-top:-20px;'>{mascot}</div>",
-        unsafe_allow_html=True
-    )
-    st.markdown(
-        f"<div style='font-size:18px; text-align:center; margin-top:-10px;'>{msg}</div>",
-        unsafe_allow_html=True
-    )
+    remaining = get_remaining(goal, total)
+
+    left, right = st.columns([1.2, 1])
+
+    with left:
+        bottle_html = f"""
+        <div style="display:flex; align-items:center; gap:20px;">
+            <div class="bottle">
+                <div class="bottle-inner" style="height:{fill_percent}%"></div>
+            </div>
+            <div style="font-size:20px; font-weight:600;">
+                {progress*100:.1f}% complete<br>
+                {total} ml consumed<br>
+                <span style="font-size:14px; opacity:0.8;">Remaining: {remaining} ml</span>
+            </div>
+        </div>
+        """
+        st.markdown(bottle_html, unsafe_allow_html=True)
+
+        if progress >= 1:
+            st.balloons()
+        st.info(message)
+
+    with right:
+        st.write("### 🐢 Mascot Reaction")
+        st.markdown(
+            f"""
+            <div style='text-align:center;'>
+                <div style='font-size:80px; line-height:1;'>{mascot}</div>
+                <div style='font-size:16px; margin-top:8px;'>{message}</div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
     # TIP
     st.write("---")
     st.write("💡 Tip of the day:")
     st.write(random.choice(HYDRATION_TIPS))
 
-    # HISTORY (NEW)
-    st.write("### 📜 Today's Log")
-    if st.session_state.history:
-        for t, amt, cum in st.session_state.history[-10:]:
-            st.write(f"{t} — +{amt} ml (total: {cum} ml)")
-    else:
-        st.write("No entries yet.")
-
-    # BUTTONS
+    # Buttons
     colA, colB = st.columns(2)
-    colA.button("New Day", on_click=reset_day)
-    colB.button("View Summary", on_click=view_summary)
+    with colA: st.button("New Day", on_click=reset_day)
+    with colB: st.button("View Summary", on_click=view_summary)
 
 
-# PHASE 5 — SUMMARY PAGE
+# ---------------- PHASE 5 — SUMMARY ----------------
 elif st.session_state.phase == 5:
     st.title("🌙 End-of-Day Summary")
-    total = st.session_state.total
-    goal = st.session_state.goal
+
+    total = int(st.session_state.total)
+    goal = int(st.session_state.goal)
     progress = calculate_progress(total, goal)
 
     st.write(f"Total intake: **{total} ml**")
@@ -246,23 +244,6 @@ elif st.session_state.phase == 5:
         st.success("Goal Achieved! 🌟")
     else:
         st.info("Keep Trying! 💪")
-
-    # CHART (NEW)
-    st.write("### 📈 Intake Progress Chart")
-
-    if st.session_state.history:
-        times = [t for (t, amt, cum) in st.session_state.history]
-        cumul = [cum for (t, amt, cum) in st.session_state.history]
-
-        fig, ax = plt.subplots(figsize=(6,3))
-        ax.plot(times, cumul, marker='o')
-        ax.set_xlabel("Time")
-        ax.set_ylabel("Total (ml)")
-        ax.set_title("Today's Water Intake")
-        plt.xticks(rotation=30)
-        st.pyplot(fig)
-    else:
-        st.write("No data to show.")
 
     st.button("Start New Day", on_click=start_new_day)
     st.button("Back to Dashboard", on_click=back_to_dashboard)
