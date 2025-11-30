@@ -153,7 +153,7 @@ elif st.session_state.phase == 4:
 
     st.progress(progress)
     st.write(f"**{total} ml consumed** — Remaining: {remaining} ml")
-    st.write(f"{get_mascot(progress)} {get_message(progress)}")
+    st.info(f"{get_mascot(progress)} {get_message(progress)}")
 
     # TIP
     st.write("---")
