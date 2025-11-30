@@ -1,6 +1,10 @@
 import streamlit as st
 import random
+import turtle
+from io import BytesIO
+from PIL import Image
 
+# ---------------- AGE + TIPS ----------------
 AGE_GROUPS = {
     "Children (4-8 years)": 1200,
     "Teens (9-13 years)": 1700,
@@ -16,13 +20,66 @@ HYDRATION_TIPS = [
     "Hydrate after exercise to recover faster."
 ]
 
+
 # ---------------- SESSION STATE ----------------
 if "phase" not in st.session_state: st.session_state.phase = 1
 if "age_group" not in st.session_state: st.session_state.age_group = None
 if "goal" not in st.session_state: st.session_state.goal = 0
 if "total" not in st.session_state: st.session_state.total = 0
 if "custom_amount" not in st.session_state: st.session_state.custom_amount = 0
-if "show_tips" not in st.session_state: st.session_state.show_tips = True
+
+
+# ---------------- UTILITY FUNCTIONS ----------------
+def calculate_progress(total, goal):
+    if goal == 0:
+        return 0
+    return min(total / goal, 1.0)
+
+
+def add_water(amount):
+    st.session_state.total += amount
+
+
+def get_remaining(goal, total):
+    return max(goal - total, 0)
+
+
+def get_message(progress):
+    if progress == 0:
+        return "Let's start hydrating! 🙂"
+    elif progress < 0.5:
+        return "Good start! Keep going 😄"
+    elif progress < 0.75:
+        return "Nice progress! 😎"
+    elif progress < 1:
+        return "Almost there! 🤗"
+    else:
+        return "Goal achieved! 🎉"
+
+
+# ---------------- TURTLE MASCOT ----------------
+def turtle_mascot(progress):
+    screen = turtle.Screen()
+    screen.setup(width=300, height=300)
+    canvas = screen.getcanvas()
+
+    t = turtle.Turtle()
+    t.hideturtle()
+
+    if progress < 0.5:
+        t.write("🙂", align="center", font=("Arial", 40, "normal"))
+    elif progress < 0.75:
+        t.write("😄", align="center", font=("Arial", 40, "normal"))
+    elif progress < 1:
+        t.write("🤗", align="center", font=("Arial", 40, "normal"))
+    else:
+        t.write("🎉", align="center", font=("Arial", 40, "normal"))
+
+    buffer = BytesIO()
+    canvas.postscript(file=buffer)
+    buffer.seek(0)
+    img = Image.open(buffer)
+    return img
 
 
 # ---------------- SIMPLE CSS + BOTTLE ----------------
@@ -106,7 +163,7 @@ elif st.session_state.phase == 2:
 elif st.session_state.phase == 3:
     st.header("Adjust your daily goal")
     st.write(f"Recommended goal: {AGE_GROUPS[st.session_state.age_group]} ml")
-    
+
     st.session_state.goal = st.number_input(
         "Daily water goal (ml):",
         min_value=500,
@@ -114,7 +171,7 @@ elif st.session_state.phase == 3:
         value=st.session_state.goal,
         step=100
     )
-    
+
     st.button("Continue", on_click=continue_to_dashboard)
 
 
@@ -129,26 +186,25 @@ elif st.session_state.phase == 4:
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        if st.button("+250 ml"): st.session_state.total += 250
+        if st.button("+250 ml"): add_water(250)
     with col2:
-        if st.button("+500 ml"): st.session_state.total += 500
+        if st.button("+500 ml"): add_water(500)
     with col3:
-        if st.button("+750 ml"): st.session_state.total += 750
+        if st.button("+750 ml"): add_water(750)
     with col4:
-        if st.button("+1000 ml"): st.session_state.total += 1000
+        if st.button("+1000 ml"): add_water(1000)
 
     # CUSTOM ADD
     st.write("### ✏️ Add custom amount")
     custom = st.number_input("Enter amount (ml):", min_value=0, step=50, value=0)
     if st.button("Add"):
-        st.session_state.total += custom
+        add_water(custom)
 
-    # ---------------- 📊 PROGRESS + BOTTLE (ADDED) ----------------
+    # PROGRESS
     st.write("### 📊 Progress")
-
     total = st.session_state.total
     goal = st.session_state.goal
-    progress = min(total / goal, 1.0)
+    progress = calculate_progress(total, goal)
 
     # Bottle HTML
     bottle_html = f"""
@@ -164,48 +220,16 @@ elif st.session_state.phase == 4:
     """
     st.markdown(bottle_html, unsafe_allow_html=True)
 
-    st.write(f"Remaining: **{goal - total} ml**")
+    # Remaining
+    remaining = get_remaining(goal, total)
+    st.write(f"Remaining: **{remaining} ml**")
 
-    # Mascot
-    if progress == 0:
-        st.info("Let's start hydrating! 🙂")
-    elif progress < 0.5:
-        st.info("Good start! Keep going 😄")
-    elif progress < 0.75:
-        st.success("Nice progress! 😎")
-    elif progress < 1:
-        st.success("Almost there! 🤗")
-    else:
+    # MESSAGES
+    message = get_message(progress)
+    if progress >= 1:
         st.balloons()
-        st.success("Goal achieved! 🎉")
+    st.info(message)
 
-    # TIP OF DAY
-    st.write("---")
-    st.write("💡 Tip of the day:")
-    st.write(random.choice(HYDRATION_TIPS))
-
-    # Buttons
-    colA, colB = st.columns(2)
-    with colA: st.button("New Day", on_click=reset_day)
-    with colB: st.button("View Summary", on_click=view_summary)
-
-
-# ---------------- PHASE 5 — SUMMARY ----------------
-elif st.session_state.phase == 5:
-    st.title("🌙 End-of-Day Summary")
-
-    total = st.session_state.total
-    goal = st.session_state.goal
-    progress = min(total / goal, 1)
-
-    st.write(f"Total intake: **{total} ml**")
-    st.write(f"Progress: **{progress*100:.1f}%**")
-
-    if total >= goal:
-        st.success("Goal Achieved! 🌟")
-    else:
-        st.info("Keep Trying! 💪")
-
-    st.button("Start New Day", on_click=start_new_day)
-    st.button("Back to Dashboard", on_click=back_to_dashboard)
+    # TURTLE MASCOT
+    st.write("### 🐢
 
