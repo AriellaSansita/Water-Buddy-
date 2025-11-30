@@ -17,6 +17,7 @@ HYDRATION_TIPS = [
     "Hydrate after exercise to recover faster."
 ]
 
+
 # ---------------- SESSION STATE ----------------
 if "phase" not in st.session_state: st.session_state.phase = 1
 if "age_group" not in st.session_state: st.session_state.age_group = None
@@ -31,6 +32,7 @@ def calculate_progress(total, goal):
         return 0.0
     return min(total / goal, 1.0)
 
+
 def add_water(amount):
     try:
         amt = int(amount)
@@ -38,8 +40,10 @@ def add_water(amount):
         amt = 0
     st.session_state.total += amt
 
+
 def get_remaining(goal, total):
     return max(goal - total, 0)
+
 
 def get_message(progress):
     if progress == 0:
@@ -52,6 +56,7 @@ def get_message(progress):
         return "Almost there! 🤗"
     else:
         return "Goal achieved! 🎉"
+
 
 def get_mascot(progress):
     if progress == 0:
@@ -204,10 +209,10 @@ elif st.session_state.phase == 4:
 
         if progress >= 1:
             st.balloons()
-        st.info(message)
+        # Removed: st.info(message)
 
     with right:
-        st.write("### 🐢 Mascot Reaction")
+        st.write("### 🐢")
         st.markdown(
             f"""
             <div style='text-align:center;'>
@@ -218,7 +223,7 @@ elif st.session_state.phase == 4:
             unsafe_allow_html=True
         )
 
-    # TIP
+    # TIP OF THE DAY
     st.write("---")
     st.write("💡 Tip of the day:")
     st.write(random.choice(HYDRATION_TIPS))
@@ -247,3 +252,4 @@ elif st.session_state.phase == 5:
 
     st.button("Start New Day", on_click=start_new_day)
     st.button("Back to Dashboard", on_click=back_to_dashboard)
+
