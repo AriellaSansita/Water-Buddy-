@@ -157,8 +157,8 @@ elif st.session_state.phase == 4:
 
     # TIP
     st.write("---")
-    st.write("💡 Tip of the day:")
-    st.write(random.choice(HYDRATION_TIPS))
+    st.subheader("💡 Tip of the day:")
+    st.header(random.choice(HYDRATION_TIPS))
 
     # HISTORY / LOG
     st.write("### ⏱ Today's Log")
