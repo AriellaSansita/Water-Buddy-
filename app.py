@@ -29,12 +29,16 @@ if "custom_amount" not in st.session_state: st.session_state.custom_amount = 0
 # ---------------- UTILITY FUNCTIONS ----------------
 def calculate_progress(total, goal):
     if goal == 0:
-        return 0
+        return 0.0
     return min(total / goal, 1.0)
 
 
 def add_water(amount):
-    st.session_state.total += amount
+    try:
+        amt = int(amount)
+    except Exception:
+        amt = 0
+    st.session_state.total += amt
 
 
 def get_remaining(goal, total):
@@ -54,8 +58,9 @@ def get_message(progress):
         return "Goal achieved! 🎉"
 
 
-# ---------------- TURTLE MASCOT ----------------
+# ---------------- MASCOT ----------------
 def get_mascot(progress):
+    """Return an emoji (or text) representing mascot reaction."""
     if progress == 0:
         return "🙂"
     elif progress < 0.5:
@@ -68,12 +73,13 @@ def get_mascot(progress):
         return "🎉"
 
 
-
 # ---------------- SIMPLE CSS + BOTTLE ----------------
 st.markdown("""
     <style>
-    body {
+    .app-background {
         background: linear-gradient(to right, #4FD1C5, #60A5FA);
+        padding: 20px;
+        border-radius: 12px;
     }
     .stButton>button {
         background-color: #60A5FA;
@@ -149,13 +155,16 @@ elif st.session_state.phase == 2:
 # ---------------- PHASE 3 — GOAL ----------------
 elif st.session_state.phase == 3:
     st.header("Adjust your daily goal")
-    st.write(f"Recommended goal: {AGE_GROUPS[st.session_state.age_group]} ml")
+    if st.session_state.age_group is not None:
+        st.write(f"Recommended goal: {AGE_GROUPS[st.session_state.age_group]} ml")
+    else:
+        st.write("Recommended goal: pick an age group")
 
     st.session_state.goal = st.number_input(
         "Daily water goal (ml):",
         min_value=500,
         max_value=10000,
-        value=st.session_state.goal,
+        value=int(st.session_state.goal) if st.session_state.goal else 2000,
         step=100
     )
 
@@ -189,15 +198,16 @@ elif st.session_state.phase == 4:
 
     # PROGRESS
     st.write("### 📊 Progress")
-    total = st.session_state.total
-    goal = st.session_state.goal
+    total = int(st.session_state.total)
+    goal = int(st.session_state.goal) if st.session_state.goal else 0
     progress = calculate_progress(total, goal)
 
-    # Bottle HTML
+    # Bottle HTML (height integer to avoid weird decimals)
+    fill_percent = int(progress * 100)
     bottle_html = f"""
     <div style="display:flex; align-items:center; gap:20px;">
         <div class="bottle">
-            <div class="bottle-inner" style="height:{progress*100}%"></div>
+            <div class="bottle-inner" style="height:{fill_percent}%"></div>
         </div>
         <div style="font-size:20px; font-weight:600;">
             {progress*100:.1f}% complete<br>
@@ -217,10 +227,10 @@ elif st.session_state.phase == 4:
         st.balloons()
     st.info(message)
 
-    # TURTLE MASCOT
+    # MASCOT (display emoji/large)
     st.write("### 🐢 Mascot Reaction")
-    mascot_img = turtle_mascot(progress)
-    st.image(mascot_img, width=120)
+    mascot = get_mascot(progress)
+    st.markdown(f"<div style='font-size:72px; line-height:1'>{mascot}</div>", unsafe_allow_html=True)
 
     # TIP
     st.write("---")
@@ -237,14 +247,14 @@ elif st.session_state.phase == 4:
 elif st.session_state.phase == 5:
     st.title("🌙 End-of-Day Summary")
 
-    total = st.session_state.total
-    goal = st.session_state.goal
+    total = int(st.session_state.total)
+    goal = int(st.session_state.goal) if st.session_state.goal else 0
     progress = calculate_progress(total, goal)
 
     st.write(f"Total intake: **{total} ml**")
     st.write(f"Progress: **{progress*100:.1f}%**")
 
-    if total >= goal:
+    if total >= goal and goal > 0:
         st.success("Goal Achieved! 🌟")
     else:
         st.info("Keep Trying! 💪")
