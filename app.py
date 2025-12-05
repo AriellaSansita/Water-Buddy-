@@ -152,8 +152,18 @@ elif st.session_state.phase == 4:
     progress = calculate_progress(total, goal)
     remaining = get_remaining(goal, total)
 
+    # ---- Added percentage calculation ----
+    percent_consumed = (total / goal) * 100 if goal else 0
+    percent_left = 100 - percent_consumed
+    # --------------------------------------
+
     st.progress(progress)
-    st.write(f"**{total} ml consumed** — Remaining: {remaining} ml")
+
+    st.write(
+        f"**{total} ml consumed** ({percent_consumed:.1f}%) — "
+        f"Remaining: {remaining} ml ({percent_left:.1f}%)"
+    )
+
     st.info(f"{get_mascot(progress)} {get_message(progress)}")
 
     # TIP
